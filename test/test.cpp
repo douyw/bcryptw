@@ -2,7 +2,6 @@
 #include "bcryptw.h"
 
 #include <iostream>
-#include <algorithm>
 
 #include <openssl/md5.h>
 
@@ -31,15 +30,12 @@ std::string md5_hex(std::string const& buf) {
 
 int main(int argc, char* argv[]) {
 
-    std::cout << "argc = " << argc;
-    for (int i=0; i< argc; ++i) {
-        std::cout << "\n argv[" << i<< "]: " << argv[i];
-    }
     std::string password = "qwert12345";
     std::string password_md5 = md5_raw(password);
     std::string hashed_password;
     if (argc > 1) {
-        hashed_password = argv[1];
+//        hashed_password = argv[1];
+        // TODO: find a way to pass the encrtyped password from command line.
         hashed_password = "$2a$10$McyxE4iUweHov7KiA/iUg.0bveupN2B6m1aw6IMcmePJpcu0U046q";
     } else {
         hashed_password = bcryptw::digest(password_md5, 10);
