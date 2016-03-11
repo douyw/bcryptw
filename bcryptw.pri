@@ -1,0 +1,7 @@
+DESTDIR=$$PWD/bin
+
+CONFIG += c++11
+
+INCLUDEPATH += $$PWD/include
+
+LIBS += -L$$DESTDIR
