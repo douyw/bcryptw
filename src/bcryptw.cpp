@@ -2,8 +2,12 @@
 
 #include <string>
 #include <sstream>
-#include <vector>
 #include <iostream>
+#include <iomanip>
+#include <algorithm>
+#include <stdexcept>
+#include <iterator>
+#include <vector>
 #include <tuple>
 
 #include <string.h>
@@ -18,6 +22,7 @@ extern "C" {
 
 
 #include "openssl/rand.h"
+#include "openssl/md5.h"
 
 // see: @@streaches in devise.rb file
 const int k_default_cost = 11;
@@ -133,6 +138,86 @@ bool compare(std::string password, std::string hashed_password) {
 //    std::cout << "\n----- salt: " << salt << '\n';
     std::string new_hashed_password = hash_secret(password, salt);
     return new_hashed_password == hashed_password;
+}
+
+std::string md5_raw(std::string const& buf) {
+    unsigned char digest[16];
+    MD5_CTX context;
+    MD5_Init(&context);
+    MD5_Update(&context, buf.c_str(), buf.length());
+    MD5_Final(digest, &context);
+    std::string ret;
+    ret.assign((char *)&digest[0], 16);
+    return ret;
+}
+
+std::string md5_hex(std::string const& buf) {
+    unsigned char digest[16];
+    MD5_CTX context;
+    MD5_Init(&context);
+    MD5_Update(&context, buf.c_str(), buf.length());
+    MD5_Final(digest, &context);
+    char md5string[33];
+    for(int i = 0; i < 16; ++i)
+        sprintf(&md5string[i*2], "%02x", (unsigned int)digest[i]);
+    return md5string;
+}
+
+std::string random_salt_bytes() {
+    char buf[MAX_SALT_LENGTH+1];
+    RAND_bytes((unsigned char *)buf, MAX_SALT_LENGTH);
+    buf[MAX_SALT_LENGTH] = '\0';
+    return buf;
+}
+
+std::string random_string(std::uint8_t length) {
+    static std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    static bool seeded = false;
+    if (!seeded) {
+        srand(time(NULL));
+        seeded = true;
+    }
+    std::string result;
+    result.resize(length);
+    for (int i = 0; i < length; i++)
+        result[i] = charset[rand() % charset.length()];
+
+    return result;
+}
+
+std::string string_to_hex(const std::string& input) {
+    static const char* const lut = "0123456789abcdef"; // "0123456789ABCDEF";
+    size_t len = input.length();
+
+    std::string output;
+    output.reserve(2 * len);
+    for (size_t i = 0; i < len; ++i) {
+        const unsigned char c = input[i];
+        output.push_back(lut[c >> 4]);
+        output.push_back(lut[c & 15]);
+    }
+    return output;
+}
+
+std::string hex_to_string(const std::string& input) {
+    static const char* const lut = "0123456789abcdef"; // "0123456789ABCDEF";
+    size_t len = input.length();
+    if (len & 1) throw std::invalid_argument("odd length");
+
+    std::string output;
+    output.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2) {
+        char a = input[i];
+        const char* p = std::lower_bound(lut, lut + 16, a);
+        if (*p != a) throw std::invalid_argument("not a hex digit");
+
+        char b = input[i + 1];
+        const char* q = std::lower_bound(lut, lut + 16, b);
+        if (*q != b) throw std::invalid_argument("not a hex digit");
+
+        output.push_back(((p - lut) << 4) | (q - lut));
+    }
+    return output;
 }
 
 } // end of bcrypt

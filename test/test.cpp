@@ -30,8 +30,14 @@ std::string md5_hex(std::string const& buf) {
 
 int main(int argc, char* argv[]) {
 
+    std::string salt = bcryptw::random_string(24);
     std::string password = "qwert12345";
-    std::string password_md5 = md5_raw(password);
+    password += salt;
+    std::cout << "\n salt(raw): " << salt;
+    std::cout << "\n salt(hex): " << bcryptw::string_to_hex(salt);
+    std::string password_md5 = bcryptw::md5_raw(password);
+    std::cout << "\n password_md5(raw): " << password_md5;
+    std::cout << "\n password_md5(hex): " << bcryptw::string_to_hex(password_md5);
     std::string hashed_password;
     if (argc > 1) {
 //        hashed_password = argv[1];
