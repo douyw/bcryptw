@@ -36,6 +36,7 @@ const int MIN_COST = 4;
 #define OUTPUT_ERR(err)  std::cerr << err << std::endl;
 
 
+static
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
@@ -45,7 +46,7 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
     return elems;
 }
 
-
+static
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     split(s, delim, elems);
@@ -61,6 +62,8 @@ static std::string bc_salt(const char* prefix, unsigned long count, std::string 
     if (salt) {
         ret.assign(salt);
         free(salt);
+    } else {
+        std::cerr << "crypt_gensalt_ra(...) failed! err: " << errno << '\n';
     }
     return ret;
 }
@@ -75,6 +78,8 @@ static std::string bc_crypt(std::string key, std::string setting) {
     if (value) {
         ret.assign(value);
         free(data);
+    } else {
+        std::cerr << "crypt_ra(...) failed!\n";
     }
     return ret;
 }
@@ -119,20 +124,20 @@ extract_salt(std::string const& hashed_password) {
     return std::make_tuple(version, cost, salt, hash);
 }
 
-std::string digest(std::string secret, unsigned long streches) {
+std::string digest(std::string const& secret, unsigned long streches) {
     unsigned long cost = streches == 0 ? k_default_cost : streches;
     if (cost <= 31) {
         static char prefix[] = "$2a$05$CCCCCCCCCCCCCCCCCCCCC.E5YPO9kmyuRGyh0XouQYb4YMJKvyOeW";
-        char buf[MAX_SALT_LENGTH+1];
+        char buf[MAX_SALT_LENGTH];
         RAND_bytes((unsigned char *)buf, MAX_SALT_LENGTH);
-        buf[MAX_SALT_LENGTH] = '\0';
-        std::string salt = bc_salt(prefix, cost, buf);
+//        buf[MAX_SALT_LENGTH] = '\0';
+        std::string salt = bc_salt(prefix, cost, std::string(buf, MAX_SALT_LENGTH));
         return hash_secret(secret, salt);
     }
     return "";
 }
 
-bool compare(std::string password, std::string hashed_password) {
+bool compare(std::string const& password, std::string const& hashed_password) {
     auto t = extract_salt(hashed_password);
     std::string salt = std::get<2>(t);
 //    std::cout << "\n----- salt: " << salt << '\n';

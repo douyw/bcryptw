@@ -205,7 +205,7 @@ char *__crypt_gensalt_rn(__CONST char *prefix, unsigned long count,
 
 	/* This may be supported on some platforms in the future */
 	if (!input) {
-		__set_errno(EINVAL);
+        __set_errno(EINVAL);
 		return NULL;
 	}
 
@@ -224,8 +224,8 @@ char *__crypt_gensalt_rn(__CONST char *prefix, unsigned long count,
 	    memchr(_crypt_itoa64, prefix[1], 64)))
 		use = _crypt_gensalt_traditional_rn;
 	else {
-		__set_errno(EINVAL);
-		return NULL;
+        __set_errno(EINVAL);
+        return NULL;
 	}
 
 	return use(count, input, size, output, output_size);

@@ -4,8 +4,8 @@
 #include <string>
 
 namespace bcryptw {
-    std::string digest(std::string secret, unsigned long streches);
-    bool compare(std::string password, std::string hashed_password);
+    std::string digest(std::string const& secret, unsigned long streches);
+    bool compare(std::string const& password, std::string const& hashed_password);
 
     std::string random_salt_bytes();
     std::string random_string(std::uint8_t length);
